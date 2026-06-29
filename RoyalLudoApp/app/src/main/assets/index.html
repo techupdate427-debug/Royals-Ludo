@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ─── SEO ───────────────────────────────────────────────────────────── -->
+    <title>Royal Ludo Club — Premium Multiplayer Ludo Game</title>
+    <meta name="description" content="Play Royal Ludo online or offline. Compete with friends, climb the ELO ranks, unlock powers and cosmetics in this premium multiplayer Ludo experience." />
+    <meta name="keywords" content="ludo, royal ludo, multiplayer ludo, online ludo, board game" />
+    <meta name="author" content="Royal Ludo Club" />
+
+    <!-- ─── PWA Manifest ──────────────────────────────────────────────────── -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- ─── Theme & Status Bar ───────────────────────────────────────────── -->
+    <meta name="theme-color" content="#f4cb45" />
+    <meta name="msapplication-navbutton-color" content="#f4cb45" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- ─── Apple PWA (iOS) ───────────────────────────────────────────────── -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Royal Ludo" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-512.png" />
+
+    <!-- ─── Favicon ───────────────────────────────────────────────────────── -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+    <link rel="shortcut icon" href="icon-192.png" />
+
+    <!-- ─── Open Graph (share links look great) ──────────────────────────── -->
+    <meta property="og:title" content="Royal Ludo Club" />
+    <meta property="og:description" content="Premium multiplayer Ludo with online rooms, ELO ranking and special powers." />
+    <meta property="og:image" content="icon-512.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- ─── Styles ────────────────────────────────────────────────────────── -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- ─── Runtime Error Debugger Overlay ──────────────────────────────── -->
+    <script>
+      window.addEventListener('error', function(e) {
+        var errDiv = document.getElementById('debug-error-overlay');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.id = 'debug-error-overlay';
+          errDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#e13345;color:#fff;padding:12px;font-family:monospace;font-size:12px;word-break:break-all;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+          document.body.appendChild(errDiv);
+        }
+        errDiv.innerHTML = '<strong>❌ JS ERROR:</strong> ' + e.message + ' <br><small>at ' + e.filename + ':' + e.lineno + '</small>';
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var errDiv = document.getElementById('debug-error-overlay');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.id = 'debug-error-overlay';
+          errDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#e9a825;color:#111;padding:12px;font-family:monospace;font-size:12px;word-break:break-all;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+          document.body.appendChild(errDiv);
+        }
+        errDiv.innerHTML = '<strong>⚠️ UNHANDLED PROMISE REJECTION:</strong> ' + e.reason;
+      });
+    </script>
+
+    <!-- ─── Service Worker Registration ─────────────────────────────────── -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+            .catch(err => console.warn('[PWA] SW registration failed:', err));
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="game-surface" aria-label="Royal Ludo game">
+        <div class="top-bar">
+          <div>
+            <span class="eyebrow">Local multiplayer board game</span>
+            <h1>Royal Ludo</h1>
+            <p id="statusText">Roll to begin.</p>
+            <div class="home-actions" aria-label="Home screen actions">
+              <button class="home-action" data-home-action="play" type="button">Play Now</button>
+              <button class="home-action" data-home-action="friends" type="button">Play with Friends</button>
+              <button class="home-action" data-home-action="tournament" type="button">Tournament</button>
+              <button class="home-action" data-home-action="shop" type="button">Shop</button>
+              <button class="home-action" data-home-action="profile" type="button">Profile</button>
+              <button class="home-action" data-home-action="spin" type="button">Spin Wheel</button>
+            </div>
+          </div>
+          <div class="top-actions">
+            <div class="wallet" aria-label="Wallet">
+              <div class="wallet-card coin-wallet" aria-label="Coin balance">
+                <span class="currency-icon coin-icon" aria-hidden="true"></span>
+                <span class="wallet-copy">
+                  <small>Coins</small>
+                  <strong id="coinBalance">2,500</strong>
+                </span>
+              </div>
+              <div class="wallet-card gem-wallet" aria-label="Gem balance">
+                <span class="currency-icon gem-icon" aria-hidden="true"></span>
+                <span class="wallet-copy">
+                  <small>Gems</small>
+                  <strong id="diamondBalance">24</strong>
+                </span>
+              </div>
+            </div>
+            <div class="player-count" aria-label="Player count">
+              <button class="count-option active" data-count="4" type="button">4P</button>
+              <button class="count-option" data-count="3" type="button">3P</button>
+              <button class="count-option" data-count="2" type="button">2P</button>
+            </div>
+            <button id="newGameButton" class="secondary-button" type="button">New game</button>
+          </div>
+        </div>
+
+        <div class="board-stage">
+          <span class="arena-edge arena-edge-red" aria-hidden="true"></span>
+          <span class="arena-edge arena-edge-green" aria-hidden="true"></span>
+          <span class="arena-edge arena-edge-yellow" aria-hidden="true"></span>
+          <span class="arena-edge arena-edge-blue" aria-hidden="true"></span>
+          <div class="table-label top-left">Red base</div>
+          <div class="table-label top-right">Green base</div>
+          <div id="board" class="board" aria-label="Ludo board"></div>
+          <div id="snakeBoard" class="snake-board" aria-label="Snakes and ladders board" hidden></div>
+          <div class="table-label bottom-left">Blue base</div>
+          <div class="table-label bottom-right">Yellow base</div>
+          <div id="gameOverOverlay" class="game-over-overlay" aria-live="polite" hidden>
+            <div class="game-over-card" role="status">
+              <span class="game-over-kicker">Game over</span>
+              <strong id="gameOverTitle">Red wins</strong>
+              <p id="gameOverText">Match complete.</p>
+              <div class="game-over-actions">
+                <button id="gameOverReplayButton" class="mini-button" type="button">Replay</button>
+                <button id="gameOverNewButton" class="mini-button" type="button">New game</button>
+              </div>
+            </div>
+          </div>
+          <div id="onlineLobbyOverlay" class="online-lobby-overlay" hidden>
+            <div class="lobby-card">
+              <span class="lobby-kicker">Multiplayer Lobby</span>
+              <h2 id="lobbyRoomCodeText">ROOM-XXXX</h2>
+              <p class="lobby-subtitle">Waiting for players to join seats...</p>
+              <div class="lobby-slots">
+                <div class="lobby-slot red" data-slot="0">
+                  <span class="slot-color-dot"></span>
+                  <span class="slot-player-name">Empty Seat</span>
+                  <span class="slot-player-status">Waiting...</span>
+                </div>
+                <div class="lobby-slot green" data-slot="1">
+                  <span class="slot-color-dot"></span>
+                  <span class="slot-player-name">Empty Seat</span>
+                  <span class="slot-player-status">Waiting...</span>
+                </div>
+                <div class="lobby-slot yellow" data-slot="2">
+                  <span class="slot-color-dot"></span>
+                  <span class="slot-player-name">Empty Seat</span>
+                  <span class="slot-player-status">Waiting...</span>
+                </div>
+                <div class="lobby-slot blue" data-slot="3">
+                  <span class="slot-color-dot"></span>
+                  <span class="slot-player-name">Empty Seat</span>
+                  <span class="slot-player-status">Waiting...</span>
+                </div>
+              </div>
+              <div class="lobby-actions">
+                <button id="lobbyStartButton" class="primary-button" type="button" disabled>Start Match</button>
+                <button id="lobbyReadyButton" class="primary-button" type="button" style="display: none;">Ready</button>
+                <button id="lobbyLeaveButton" class="secondary-button" type="button">Leave Room</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="control-panel" aria-label="Game controls">
+          <div class="turn-card">
+            <span class="turn-label">Current Turn</span>
+            <strong id="turnName">Red</strong>
+            <span id="turnMeta" class="turn-meta">Waiting for roll</span>
+          </div>
+          <button id="diceButton" class="dice-button" type="button" aria-label="Roll dice">
+            <span id="diceFace" class="dice-face" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </span>
+            <span class="dice-copy">
+              <strong>Roll</strong>
+              <small id="diceSubtext">Tap to throw</small>
+            </span>
+          </button>
+          <div id="moveHint" class="move-hint">Move a highlighted token after rolling.</div>
+          <section class="panel-section power-dock" aria-label="Special powers">
+            <div class="section-title">
+              <span>Special Powers</span>
+              <strong id="activePowerLabel">Ready</strong>
+            </div>
+            <div class="power-grid">
+              <button class="power-button" data-power="doubleMove" type="button">Double <span id="powerDoubleCount">0</span></button>
+              <button class="power-button" data-power="blast" type="button">Blast <span id="powerBlastCount">0</span></button>
+              <button class="power-button" data-power="shield" type="button">Shield <span id="powerShieldCount">0</span></button>
+              <button class="power-button" data-power="target" type="button">Target <span id="powerTargetCount">0</span></button>
+            </div>
+            <div class="control-row">
+              <label for="targetStepSelect">Target steps</label>
+              <select id="targetStepSelect">
+                <option value="1">1 step</option>
+                <option value="2">2 steps</option>
+                <option value="3" selected>3 steps</option>
+                <option value="4">4 steps</option>
+                <option value="5">5 steps</option>
+                <option value="6">6 steps</option>
+              </select>
+            </div>
+            <div class="skill-card-row" aria-label="Skill card build">
+              <button class="skill-card active" data-skill-build="aggressive" type="button">
+                <strong>Aggressive</strong>
+                <span>Blast + Target</span>
+              </button>
+              <button class="skill-card" data-skill-build="defensive" type="button">
+                <strong>Defensive</strong>
+                <span>Shield + Shield</span>
+              </button>
+              <button class="skill-card" data-skill-build="speed" type="button">
+                <strong>Speed</strong>
+                <span>Double + Target</span>
+              </button>
+            </div>
+          </section>
+          <nav class="panel-tabs" aria-label="Command center">
+            <button class="panel-tab active" data-ui-tab="play" type="button">Play</button>
+            <button class="panel-tab" data-ui-tab="social" type="button">Social</button>
+            <button class="panel-tab" data-ui-tab="rewards" type="button">Rewards</button>
+            <button class="panel-tab" data-ui-tab="pass" type="button">Pass</button>
+            <button class="panel-tab" data-ui-tab="profile" type="button">Profile</button>
+          </nav>
+          <section class="panel-section" data-tab-panel="profile">
+            <div class="section-title">
+              <span>Profile</span>
+              <strong id="playerLevel">Level 1</strong>
+            </div>
+            <div class="profile-card">
+              <div id="profileAvatar" class="profile-avatar">RL</div>
+              <div class="profile-meta-details">
+                <label class="profile-name">
+                  <span>Player name</span>
+                  <input id="playerNameInput" type="text" maxlength="18" value="Royal Player" />
+                </label>
+                <div class="profile-rank-info">
+                  <span id="profileRankBadge" class="rank-badge">🥈</span>
+                  <span id="profileEloText">1200 ELO (Silver I)</span>
+                </div>
+              </div>
+            </div>
+            <div class="profile-actions-row">
+              <label for="avatarSelect" style="flex:1;">Avatar
+                <select id="avatarSelect" style="width:100%; margin-top:4px;">
+                  <option value="RL">Royal</option>
+                  <option value="AI">Ace</option>
+                  <option value="KP">King</option>
+                  <option value="ST">Star</option>
+                </select>
+              </label>
+              <button id="signOutButton" class="secondary-button" type="button" style="margin-left:10px; align-self:flex-end; height:36px;">Sign Out</button>
+            </div>
+            <div class="xp-track" aria-label="Level progress">
+              <span id="xpFill"></span>
+            </div>
+            <div class="stat-grid" aria-label="Profile stats">
+              <span><strong id="statWins">0</strong> wins</span>
+              <span><strong id="statLosses">0</strong> losses</span>
+              <span><strong id="statRolls">0</strong> rolls</span>
+              <span><strong id="statCaptures">0</strong> captures</span>
+              <span><strong id="statMoves">0</strong> moves</span>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="play" data-tab-active="true">
+            <div class="section-title">
+              <span>Game Modes</span>
+              <strong id="modeName">Local</strong>
+            </div>
+            <div class="mode-grid" aria-label="Game modes">
+              <button class="mode-option" data-mode="computer" type="button">Play vs AI</button>
+              <button class="mode-option" data-mode="friends" type="button">Friends Online</button>
+              <button class="mode-option" data-mode="random" type="button">Random Match</button>
+              <button class="mode-option active" data-mode="classic" type="button">Local Multiplayer</button>
+            </div>
+            <div class="control-row">
+              <label for="difficultySelect">AI level</label>
+              <select id="difficultySelect">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="social">
+            <div class="section-title">
+              <span>Add Friend</span>
+            </div>
+            <div class="chat-composer">
+              <input id="friendEmailInput" type="email" placeholder="friend@email.com" />
+              <button id="addFriendButton" class="mini-button" type="button">Add</button>
+            </div>
+            <div id="friendErrorMsg" class="auth-error-message" style="margin-top:5px; font-size:0.75rem;" hidden></div>
+            
+            <div class="section-title" style="margin-top:15px;">
+              <span>Friend Requests</span>
+            </div>
+            <ul id="friendRequestsList" class="friend-list" style="margin-bottom:10px; min-height:30px;">
+              <li style="justify-content:center; color:#a0aec0; font-size:0.85rem;">No pending requests</li>
+            </ul>
+
+            <div class="section-title" style="margin-top:15px;">
+              <span>Friends List</span>
+              <strong id="onlineFriends">0 online</strong>
+            </div>
+            <ul id="friendList" class="friend-list"></ul>
+            
+            <div class="chat-composer">
+              <input id="inviteCodeInput" type="text" maxlength="12" placeholder="Room code" />
+              <button id="inviteButton" class="mini-button" type="button">Invite</button>
+            </div>
+          </section>
+          <section class="panel-section" aria-label="Player progress" data-tab-panel="play" data-tab-active="true">
+            <div class="section-title">
+              <span>Players</span>
+              <strong id="matchMode">4 player</strong>
+            </div>
+            <ol id="scoreList" class="score-list" aria-label="Player scores"></ol>
+          </section>
+          <section class="panel-section" data-tab-panel="rewards">
+            <div class="section-title">
+              <span>Inventory</span>
+              <strong id="themeName">Classic</strong>
+            </div>
+            <div class="theme-grid" aria-label="Themes">
+              <button class="theme-option active" data-theme="classic" type="button" style="--swatch-a:#e03345;--swatch-b:#336fe8">Classic</button>
+              <button class="theme-option" data-theme="night" type="button" style="--swatch-a:#191923;--swatch-b:#7c5cff">Night</button>
+              <button class="theme-option" data-theme="nature" type="button" style="--swatch-a:#1fa565;--swatch-b:#e9bb27">Nature</button>
+              <button class="theme-option" data-theme="candy" type="button" style="--swatch-a:#ff65a5;--swatch-b:#64d8ff">Candy</button>
+            </div>
+            <div class="emoji-row" aria-label="Quick emojis">
+              <button class="emoji-option" data-emoji="Nice move!" type="button">Nice</button>
+              <button class="emoji-option" data-emoji="Lucky roll!" type="button">Lucky</button>
+              <button class="emoji-option" data-emoji="Well played!" type="button">Well</button>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="rewards">
+            <div class="section-title">
+              <span>Shop</span>
+              <strong id="shopStatus">3 items</strong>
+            </div>
+            <div id="shopList" class="shop-list"></div>
+          </section>
+          <section class="panel-section" data-tab-panel="play" data-tab-active="true">
+            <div class="section-title">
+              <span>Room</span>
+              <strong id="roomCode">ROOM-0000</strong>
+            </div>
+            <div class="room-actions">
+              <button id="roomButton" class="mini-button" type="button">New code</button>
+              <button id="saveGameButton" class="mini-button" type="button">Save</button>
+              <button id="loadGameButton" class="mini-button" type="button">Load</button>
+            </div>
+            <div class="toggle-row">
+              <label><input id="soundToggle" type="checkbox" checked /> Sound</label>
+              <label><input id="voiceToggle" type="checkbox" /> Voice</label>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="play" data-tab-active="true">
+            <div class="section-title">
+              <span>Smart Features</span>
+              <strong id="antiCheatStatus">Protected</strong>
+            </div>
+            <div class="feature-grid">
+              <button id="powerDiceButton" class="mini-button" type="button">Power dice</button>
+              <button id="replayButton" class="mini-button" type="button">Replay last</button>
+              <button class="mode-option" data-mode="tournament" type="button">Tournament</button>
+              <button class="mode-option" data-mode="story" type="button">Story mode</button>
+              <button class="mode-option" data-mode="snakes" type="button">Snakes board</button>
+              <button id="antiCheatButton" class="mini-button" type="button">Scan match</button>
+            </div>
+            <div class="toggle-row">
+              <label><input id="fastRuleToggle" type="checkbox" /> Fast Ludo</label>
+              <label><input id="board3dToggle" type="checkbox" /> 3D Board</label>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="rewards">
+            <div class="section-title">
+              <span>Daily Goals</span>
+              <strong id="seasonName">Season 1</strong>
+            </div>
+            <ul id="goalList" class="goal-list"></ul>
+            <div class="room-actions">
+              <button id="dailyRewardButton" class="mini-button" type="button">Daily reward</button>
+              <button id="spinWheelButton" class="mini-button" type="button">Spin wheel</button>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="rewards">
+            <div class="section-title">
+              <span>Achievements</span>
+              <strong id="achievementScore">0/5</strong>
+            </div>
+            <ul id="achievementList" class="achievement-list"></ul>
+          </section>
+          <section class="panel-section" data-tab-panel="rewards">
+            <div class="section-title">
+              <span>Leaderboard</span>
+              <strong id="playerRank">Bronze</strong>
+            </div>
+            <ol id="leaderboardList" class="leaderboard-list"></ol>
+          </section>
+          <section class="panel-section" data-tab-panel="pass">
+            <div class="section-title">
+              <span>Battle Pass</span>
+              <strong id="bpTierLabel">Tier 1</strong>
+            </div>
+            <div class="bp-progress-card">
+              <div class="bp-progress-details">
+                <span id="bpXpText">0 / 500 BP XP</span>
+                <button id="buyPremiumPassBtn" class="mini-button" type="button">Buy Premium (15 Gems)</button>
+              </div>
+              <div class="xp-track" aria-label="Battle Pass progress" style="margin-top: 8px;">
+                <span id="bpXpFill" style="width: 0%;"></span>
+              </div>
+            </div>
+            <div class="section-title" style="margin-top: 15px;">
+              <span>Rewards Track</span>
+            </div>
+            <div id="bpRewardsList" class="bp-rewards-list"></div>
+          </section>
+          <section class="panel-section" data-tab-panel="social">
+            <div class="section-title">
+              <span>Match Feed</span>
+              <strong id="lastRoll">No roll</strong>
+            </div>
+            <ul id="eventFeed" class="event-feed" aria-label="Match feed"></ul>
+            <div class="chat-composer">
+              <input id="chatInput" type="text" maxlength="64" placeholder="Send chat" />
+              <button id="chatButton" class="mini-button" type="button">Send</button>
+            </div>
+          </section>
+          <section class="panel-section" data-tab-panel="profile">
+            <div class="section-title">
+              <span>History</span>
+              <strong id="historyCount">0 games</strong>
+            </div>
+            <ul id="historyList" class="history-list"></ul>
+            <div class="policy-links" style="margin-top: 20px; text-align: center; font-size: 0.8rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px;">
+              <a href="privacy.html" target="_blank" style="color: #a0aec0; margin-right: 15px; text-decoration: none;">Privacy Policy</a>
+              <a href="terms.html" target="_blank" style="color: #a0aec0; text-decoration: none;">Terms of Service</a>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- PWA Install Prompt Banner (shown when browser fires beforeinstallprompt) -->
+    <div id="pwa-install-banner" hidden>
+      <img src="icon-192.png" alt="Royal Ludo icon" />
+      <div class="pwa-banner-text">
+        <strong>Install Royal Ludo</strong>
+        <span>Add to Home Screen for offline play</span>
+      </div>
+      <div class="pwa-banner-actions">
+        <button type="button" class="pwa-install-btn" id="pwaInstallBtn">Install</button>
+        <button type="button" class="pwa-dismiss-btn" id="pwaDismissBtn">Not now</button>
+      </div>
+    </div>
+
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">RL</div>
+          <h2>Royal Ludo Club</h2>
+          <p id="authSubtitle">Join the royal battle and rank up globally!</p>
+        </div>
+        
+        <div id="firebaseConfigWarning" class="config-warning-banner" hidden>
+          <span class="warning-icon">⚠️</span>
+          <span>Firebase config not set. Offline / Guest Play active.</span>
+        </div>
+
+        <div class="auth-body">
+          <form id="emailAuthForm" class="auth-form">
+            <div class="input-group">
+              <label for="authEmail">Email Address</label>
+              <input type="email" id="authEmail" required placeholder="king@ludo.com" />
+            </div>
+            <div class="input-group">
+              <label for="authPassword">Password</label>
+              <input type="password" id="authPassword" required placeholder="••••••••" minlength="6" />
+            </div>
+            
+            <div id="authErrorMsg" class="auth-error-message" hidden></div>
+
+            <button type="submit" id="authSubmitButton" class="auth-btn primary">Sign In</button>
+          </form>
+
+          <p class="auth-toggle-text">
+            Don't have an account? <span id="toggleAuthModeBtn">Sign Up</span>
+          </p>
+
+          <div class="auth-divider">
+            <span>OR</span>
+          </div>
+
+          <div class="auth-social-actions">
+            <button type="button" id="googleLoginBtn" class="auth-btn google">
+              <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+              </svg>
+              Sign In with Google
+            </button>
+
+            <button type="button" id="guestLoginBtn" class="auth-btn secondary">
+              Play as Guest
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase SDK Compat and Config -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

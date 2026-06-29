@@ -1,0 +1,62 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "rooms": {
+      "$roomId": {
+        // Anyone authenticated can read the room
+        ".read": "auth != null",
+
+        // Only authenticated users can create a room (host = seat 0)
+        ".write": "auth != null",
+
+        "gameState": {
+          // Only the host (seat 0) can write game state
+          ".write": "auth != null && root.child('rooms').child($roomId).child('seats').child('0').child('uid').val() === auth.uid",
+          ".read":  "auth != null"
+        },
+
+        "seats": {
+          "$seatIndex": {
+            // A player can only write to their own seat
+            ".write": "auth != null && (data.child('uid').val() === auth.uid || !data.exists())",
+            ".read":  "auth != null"
+          }
+        },
+
+        "chat": {
+          // Any room member can send chat
+          ".write": "auth != null",
+          ".read":  "auth != null",
+          "$msgId": {
+            // Enforce max chat message length
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 200"
+          }
+        },
+
+        "rollRequest": {
+          // Any authenticated player can request a roll
+          ".write": "auth != null",
+          ".read":  "auth != null"
+        }
+      }
+    },
+
+    "matchmakingQueue": {
+      // Each user can only write their own queue entry
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".read":  "auth != null"
+      }
+    },
+
+    "presence": {
+      "$uid": {
+        // Each user controls their own presence node
+        ".write": "auth != null && auth.uid === $uid",
+        ".read":  "auth != null"
+      }
+    }
+  }
+}

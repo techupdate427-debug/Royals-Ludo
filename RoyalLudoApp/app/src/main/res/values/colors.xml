@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Royal Ludo golden accent -->
+    <color name="colorPrimary">#F4CB45</color>
+    <color name="colorPrimaryDark">#E9A825</color>
+    <color name="colorAccent">#F4CB45</color>
+    <color name="splashBackground">#0e1220</color>
+    <color name="white">#FFFFFF</color>
+</resources>
