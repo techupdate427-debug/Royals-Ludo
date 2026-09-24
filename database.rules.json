@@ -13,6 +13,7 @@
 
         "gameState": {
           // Only the host (seat 0) can write game state
+          // Note: Actual game move validation should occur in client/server logic
           ".write": "auth != null && root.child('rooms').child($roomId).child('seats').child('0').child('uid').val() === auth.uid",
           ".read":  "auth != null"
         },
@@ -30,8 +31,8 @@
           ".write": "auth != null",
           ".read":  "auth != null",
           "$msgId": {
-            // Enforce max chat message length
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 200"
+            // Enforce max chat message length and prevent empty messages
+            ".validate": "newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 200"
           }
         },
 
