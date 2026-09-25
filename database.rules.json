@@ -32,7 +32,10 @@
           ".read":  "auth != null",
           "$msgId": {
             // Enforce max chat message length and prevent empty messages
-            ".validate": "newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 200"
+            // Validate all required fields: sender (non-empty string), text (non-empty string, max 200 chars), timestamp (number)
+            ".validate": "newData.child('sender').isString() && newData.child('sender').val().length > 0 &&
+                        newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 200 &&
+                        newData.child('timestamp').isNumber()"
           }
         },
 
