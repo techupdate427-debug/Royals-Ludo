@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.Vibrator
 import android.view.KeyEvent
 import android.view.View
+import android.util.Log
 import android.webkit.*
 import android.widget.ProgressBar
 import android.widget.RelativeLayout
@@ -111,6 +112,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                Log.e("RoyalLudo", "WebView renderer terminated; didCrash=${detail.didCrash()}")
+                return true
+            }
+            override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                Log.e("RoyalLudo", "Web resource error ${error.errorCode}: ${error.description}")
+                super.onReceivedError(view, request, error)
+            }
             override fun onPageFinished(view: WebView, url: String) {
                 progressBar.visibility = View.GONE
                 // Inject vibration bridge call so navigator.vibrate() works

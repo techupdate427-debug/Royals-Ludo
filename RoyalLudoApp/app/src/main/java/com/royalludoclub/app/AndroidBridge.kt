@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.webkit.JavascriptInterface
 import org.json.JSONArray
 import org.json.JSONException
@@ -40,6 +41,12 @@ class AndroidBridge(private val context: Context) {
         } catch (e: Exception) {
             // Vibration is non-critical, fail silently
         }
+    }
+
+    /** Receives structured browser errors for Logcat/crash collectors. */
+    @JavascriptInterface
+    fun reportError(payload: String) {
+        Log.e("RoyalLudo", payload.take(4000))
     }
 
     @JavascriptInterface

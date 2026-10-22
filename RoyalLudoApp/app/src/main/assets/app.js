@@ -1373,9 +1373,10 @@ function legalMovesForCurrent() {
 }
 
 function canMove(token, dice) {
-  if (token.progress === FINISHED) return false;
-  if (token.progress === -1) return dice === 6;
-  return token.progress + dice <= FINISHED;
+  // Keep the UI controller aligned with the tested, shared rules module.
+  return window.RoyalLudoRules
+    ? window.RoyalLudoRules.canMove(token.progress, dice)
+    : (token.progress !== FINISHED && (token.progress === -1 ? dice === 6 : token.progress + dice <= FINISHED));
 }
 
 function isLegal(playerId, tokenIndex) {

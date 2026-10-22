@@ -45,3 +45,19 @@ Every push and pull request runs the Android debug build through GitHub Actions.
 ## Project status
 
 Royals-Ludo is an active game project. The core gameplay and mobile wrapper are implemented; online play depends on the Firebase project configuration supplied by the deployment environment.
+
+## Automated gameplay tests
+
+The deterministic Ludo rules live in [`game-rules.js`](game-rules.js), which is loaded by both the web game and Android assets. Run the six core gameplay tests with:
+
+```bash
+node --test tests/game-rules.test.cjs
+```
+
+The suite covers entering from home, legal dice movement, finish boundaries, board wrapping, safe squares, shields, captures, and quick/classic win conditions.
+
+## Crash and runtime monitoring
+
+[`monitoring.js`](monitoring.js) captures uncaught errors, unhandled promise rejections, and security-policy violations. It stores the latest 25 diagnostic events locally for offline debugging and forwards them to the Android bridge when running in the APK. Android also logs WebView renderer termination and resource failures under the `RoyalLudo` tag.
+
+For a production dashboard, load a Sentry browser SDK and initialize it with a deployment-provided DSN before `monitoring.js`; no DSN or private monitoring credential is committed to this repository. The monitoring adapter automatically calls `Sentry.captureException` when the SDK is present.
